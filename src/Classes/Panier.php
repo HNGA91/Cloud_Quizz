@@ -1,175 +1,147 @@
 <?php
 
-
 namespace App\Classes;
 
+use App\Entity\ProduitBoutique;
 use App\Repository\ProduitBoutiqueRepository;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
+class Panier
+{
+    private SessionInterface $session;
 
-class Panier {
+    private ProduitBoutiqueRepository $produitBoutiqueRepository;
 
-    private $session;
-    private $produitboutiquerepository;
+    public function __construct(
+        RequestStack $requestStack,
+        ProduitBoutiqueRepository $produitBoutiqueRepository,
+    ) {
+        $session = $requestStack->getSession();
 
-    public function __construct(SessionInterface $session, ProduitBoutiqueRepository $produitboutiquerepository)
-    {
-        $this->session = $session;
-        $this->produitboutiquerepository = $produitboutiquerepository;
-    }
-
-    /**
-     * fonction qui ajoute un article au panier qui sera passé dans les paramètre de la function
-     */
-    public function add_article_panier($article) {
-
-        // je créé un tableau
-
-        $panier=$this->session->get('panier',[]);
-
-        // je teste le panier pour voir si la variable existe
-
-        if(!empty($panier[$article])) {
-
-            // si elle existe je rajoute à la quantité 1
-
-            $panier[$article] = $panier[$article] + 1;
-        }else{
-
-            // sinon je créé la demande avec une valeur de 1
-
-            $panier[$article] = 1;
+        if (!$session instanceof SessionInterface) {
+            throw new \RuntimeException('Session introuvable.');
         }
 
-        // je renvoi à l'obget session les nouvelle valeur du panier
+        $this->session = $session;
+        $this->produitBoutiqueRepository = $produitBoutiqueRepository;
+    }
+
+    public function addArticlePanier(int $articleId): void
+    {
+        $panier = $this->getPanier();
+
+        if (isset($panier[$articleId])) {
+            ++$panier[$articleId];
+        } else {
+            $panier[$articleId] = 1;
+        }
 
         $this->session->set('panier', $panier);
-
-
     }
 
     /**
-     * fonction qui retourne le panier
+     * @return array<int, int>
      */
-    public function getPanier() {
+    public function getPanier(): array
+    {
+        /** @var array<int, int> $panier */
+        $panier = $this->session->get('panier', []);
 
-        return $this->session->get('panier', []);
+        return $panier;
     }
 
-    /**
-     * fonction qui suppprime tout le panier
-     */
-    public function deletePanier() {
-
+    public function deletePanier(): void
+    {
         $this->session->remove('panier');
     }
 
-    /**
-     * fonction qui supprime un article du panier par son id
-     */
-    public function deleteArticlePanier($id) 
+    public function deleteArticlePanier(int $id): void
     {
-        // je vais get le panier
-        $panier=$this->getPanier();
+        $panier = $this->getPanier();
 
-        // je vérifie si le produit existe
-        if(!empty($panier[$id])) 
-        {
-            // si il existe, je le supprime
+        if (isset($panier[$id])) {
             unset($panier[$id]);
         }
 
-        // je renvoi à l'obget session les nouvelle valeur du panier
+        $this->session->set('panier', $panier);
+    }
+
+    public function ajoute5(): void
+    {
+        $panier = $this->getPanier();
+
+        for ($i = 1; $i <= 5; ++$i) {
+            $panier[$i] = 1;
+        }
+
+        $this->session->set('panier', $panier);
+    }
+
+    public function deleteUneQuantite(int $id): void
+    {
+        $panier = $this->getPanier();
+
+        if (!isset($panier[$id])) {
+            return;
+        }
+
+        if ($panier[$id] > 1) {
+            --$panier[$id];
+        } else {
+            unset($panier[$id]);
+        }
+
         $this->session->set('panier', $panier);
     }
 
     /**
-     * fonction qui ajoute 5 articles au panier
+     * @return array<int, array{
+     *     article: ProduitBoutique,
+     *     quantity: int
+     * }>
      */
-    public function ajoute5() 
+    public function getDetailPanier(): array
     {
-        // je get le panier avec une méthode
-        $panier=$this->getPanier();
-        for ($i = 1 ; $i <= 5 ; $i++) 
-        {
-            $panier[$i] = 1 ;
-        }
+        $panier = $this->getPanier();
 
-        // je renvoi à l'obget session les nouvelles valeurs du panier
-        $this->session->set('panier', $panier);
-    }
+        $detailPanier = [];
 
-    /**
-     * fonction qui retire 1 à la quantité d'un article
-     */
-    public function  deleteUneQuantite($id) 
-    {
-        // je get le panier avec une méthode
-        $panier=$this->getPanier();
+        foreach ($panier as $id => $quantity) {
+            $article = $this->produitBoutiqueRepository->find($id);
 
-        // je test si la quantité est supérieure à 1
-        if($panier[$id] > 1) 
-        {
-            // je retire 1 à la quantité
-            $panier[$id] = $panier[$id] - 1 ;
-        }else{
+            if (!$article instanceof ProduitBoutique) {
+                continue;
+            }
 
-        // supprime l'article du panier
-        unset($panier[$id]);
-        }
-
-        // je renvoi à l'obget session les nouvelles valeurs du panier
-        $this->session->set('panier', $panier); 
-    }
-
-    /**
-      * récupére le panier avec le détail des articles
-      */
-
-    public function getDetailPanier()
-    {
-        $panier=$this->getPanier();
-
-        $detail_panier = [];
-
-        foreach( $panier as $id=>$quantity)
-        {
-            $article=$this->produitboutiquerepository->find($id);
-            
-            $detail_panier[]=[
-                'article'=>$article,
-                'quantity'=>$quantity
-
+            $detailPanier[] = [
+                'article' => $article,
+                'quantity' => $quantity,
             ];
-
         }
 
-        return $detail_panier ;
+        return $detailPanier;
     }
 
-    /**
-      * calculer le nombre d'articles dans le panier
-      */
+    public function getNombreArticlePanier(): int
+    {
+        $nombreArticles = 0;
 
-    public function getNombreArticlePanier() {
-        $panier = $this->getDetailPanier();
-
-        return count($panier);
-    }  
-
-    /**
-      * prix totale du panier
-      */
-
-    public function getTotalePanier() {
-        $panier = $this->getDetailPanier();
-        
-        $totale = 0;
-
-        foreach ($panier as $item) {
-            $prix = $item['article']->getPrix();
-            $totale = $totale + ($item['quantity'] * $prix);
+        foreach ($this->getPanier() as $quantity) {
+            $nombreArticles += $quantity;
         }
+
+        return $nombreArticles;
+    }
+
+    public function getTotalePanier(): float
+    {
+        $totale = 0.0;
+
+        foreach ($this->getDetailPanier() as $item) {
+            $totale += $item['quantity'] * $item['article']->getPrix();
+        }
+
         return $totale;
-    } 
+    }
 }

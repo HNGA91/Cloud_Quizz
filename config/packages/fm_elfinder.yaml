@@ -1,16 +1,15 @@
 fm_elfinder:
-    assets_path: /public/javascript # chemin des fichiers JS
     instances:
         default:
-            locale: fr # Langue
-            editor: ckeditor # Editeur utilisé
-            theme: smoothness # Thème à utiliser
+            locale: fr
+            editor: ckeditor
+            fullscreen: true
+
             connector:
                 roots:
                     uploads:
-                        driver: LocalFileSystem # Pilote des fichiers
-                        path: uploads/images # Chemin d'upload
-                        show_hidden: false # Masque les fichiers cachés
-                        upload_allow: ['image/png', 'image/jpg', 'image/jpeg'] # Fichiers autorisés
-                        upload_deny: ['all'] # Fichiers interdits
-                        upload_max_size: 2M # Taille maximum
+                        driver: LocalFileSystem
+                        path: uploads
+                        upload_allow: ['image/png', 'image/jpg', 'image/jpeg']
+                        upload_deny: ['all']
+                        upload_max_size: 10M

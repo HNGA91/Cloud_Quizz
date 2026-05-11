@@ -14,36 +14,39 @@ class Commande
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $reference;
+    private ?string $reference = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="commandes")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
-    private $user;
+    private ?User $user = null;
 
     /**
-     * @ORM\ManyToMany(targetEntity=ProduitBoutique::class)
+     * @var Collection<int, ProduitBoutique>
      */
-    private $produits;
+    private Collection $produits;
 
     /**
      * @ORM\Column(type="datetime_immutable")
      */
-    private $createdAt;
+    private ?\DateTimeImmutable $createdAt = null;
 
     /**
      * @ORM\Column(type="float")
      */
-    private $prix;
+    private ?float $prix = null;
 
     public function __construct()
     {

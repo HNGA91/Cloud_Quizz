@@ -12,25 +12,27 @@ class ThemeQuizz
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $titre;
+    private ?string $titre = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image;
+    private ?string $image = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image_alt;
+    private ?string $image_alt = null;
 
     public function getId(): ?int
     {
@@ -73,7 +75,7 @@ class ThemeQuizz
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->titre;
     }

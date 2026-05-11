@@ -5,24 +5,16 @@ namespace App\Controller\Moderator;
 use App\Entity\Commentaires;
 use App\Form\Commentaires1Type;
 use App\Repository\CommentairesRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
-/**
- * @Route("/moderator/commentaires")
- */
+#[Route('/moderator/commentaires')]
 class CommentairesController extends AbstractController
-
-/**
- * @Route ("/moderator")
- */
-
 {
-    /**
-     * @Route("/liste-commentaire", name="commentaires_index", methods={"GET"})
-     */
+    #[Route('/liste-commentaire', name: 'commentaires_index', methods: ['GET'])]
     public function index(CommentairesRepository $commentairesRepository): Response
     {
         return $this->render('commentaires/index.html.twig', [
@@ -30,17 +22,14 @@ class CommentairesController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/ajouter-commentaire", name="commentaires_new", methods={"GET","POST"})
-     */
-    public function new(Request $request): Response
+    #[Route('/ajouter-commentaire', name: 'commentaires_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $commentaire = new Commentaires();
         $form = $this->createForm(Commentaires1Type::class, $commentaire);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($commentaire);
             $entityManager->flush();
 
@@ -53,9 +42,7 @@ class CommentairesController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/commentaire/{id}", name="commentaires_show", methods={"GET"})
-     */
+    #[Route('/commentaire/{id}', name: 'commentaires_show', methods: ['GET'])]
     public function show(Commentaires $commentaire): Response
     {
         return $this->render('commentaires/show.html.twig', [
@@ -63,16 +50,14 @@ class CommentairesController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/commentaire/{id}/modifier", name="commentaires_edit", methods={"GET","POST"})
-     */
-    public function edit(Request $request, Commentaires $commentaire): Response
+    #[Route('/commentaire/{id}/modifier', name: 'commentaires_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Commentaires $commentaire, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(Commentaires1Type::class, $commentaire);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
+            $entityManager->flush();
 
             return $this->redirectToRoute('commentaires_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -83,13 +68,10 @@ class CommentairesController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/commentaire/{id}", name="commentaires_delete", methods={"POST"})
-     */
-    public function delete(Request $request, Commentaires $commentaire): Response
+    #[Route('/commentaire/{id}', name: 'commentaires_delete', methods: ['POST'])]
+    public function delete(Request $request, Commentaires $commentaire, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$commentaire->getId(), $request->request->get('_token'))) {
-            $entityManager = $this->getDoctrine()->getManager();
+        if ($this->isCsrfTokenValid('delete'.$commentaire->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($commentaire);
             $entityManager->flush();
         }

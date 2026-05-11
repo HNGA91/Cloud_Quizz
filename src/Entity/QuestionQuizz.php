@@ -12,46 +12,49 @@ class QuestionQuizz
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=JeuxQuizz::class)
+     *
      * @ORM\JoinColumn(nullable=false)
      */
-    private $jeux_quizz;
+    private ?JeuxQuizz $jeux_quizz = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $question;
+    private ?string $question = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $choix1;
+    private ?string $choix1 = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $choix2;
+    private ?string $choix2 = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $choix3;
+    private ?string $choix3 = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $choix4;
+    private ?string $choix4 = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $reponse;
+    private ?string $reponse = null;
 
     public function getId(): ?int
     {

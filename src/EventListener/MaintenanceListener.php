@@ -6,26 +6,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Twig\Environment;
 
-class MaintenanceListener {
+class MaintenanceListener
+{
+    private string $maintenance;
+    private Environment $twig;
 
-    private $maintenance;
-    private $twig;
-
-    public function __construct($maintenance, Environment $twig) {
+    public function __construct(string $maintenance, Environment $twig)
+    {
         $this->maintenance = $maintenance;
         $this->twig = $twig;
     }
 
-    public function onKernelRequest(RequestEvent $event) {
-
-        //On vérifie si le fichier .maintenance n'existe pas
-        if(!file_exists($this->maintenance)) {
+    public function onKernelRequest(RequestEvent $event): void
+    {
+        // On vérifie si le fichier .maintenance n'existe pas
+        if (!file_exists($this->maintenance)) {
             return;
         }
 
-        //Le fichier existe
+        // Le fichier existe
 
-        //On définit la réponse
+        // On définit la réponse
         $event->setResponse(
             new Response(
                 $this->twig->render('maintenance/maintenance.html.twig'),
@@ -33,7 +34,7 @@ class MaintenanceListener {
             )
         );
 
-        //On stoppe le traitement des évènements
+        // On stoppe le traitement des évènements
         $event->stopPropagation();
     }
 }

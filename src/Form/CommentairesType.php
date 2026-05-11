@@ -20,17 +20,17 @@ class CommentairesType extends AbstractType
             ->add('contenu', CKEditorType::class, [
                 'label' => 'Votre commentaire :',
                 'attr' => [
-                    'form-control'
-                ]
+                    'form-control',
+                ],
             ])
             ->add('rgpd', CheckboxType::class, [
                 'label' => 'J\'accepte les conditions d\'utilisation',
                 'constraints' => [
-                    new NotBlank()
-                ]
+                    new NotBlank(),
+                ],
             ])
             ->add('parent', HiddenType::class, [
-                'mapped' => false
+                'mapped' => false,
             ])
             ->add('envoyer', SubmitType::class)
         ;

@@ -2,9 +2,6 @@
 
 namespace App\Entity;
 
-use App\Repository\ProduitBoutiqueRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -14,35 +11,37 @@ class ProduitBoutique
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $titre;
+    private ?string $titre = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image;
+    private ?string $image = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image_alt;
+    private ?string $image_alt = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $resume;
+    private ?string $resume = null;
 
     /**
      * @ORM\Column(type="float")
      */
-    private $prix;
+    private ?float $prix = null;
 
     public function getId(): ?int
     {
@@ -109,7 +108,7 @@ class ProduitBoutique
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->titre;
     }

@@ -14,36 +14,41 @@ class JeuxQuizz
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=ThemeQuizz::class)
+     *
      * @ORM\JoinColumn(nullable=false)
      */
-    private $themeQuizz;
+    private ?ThemeQuizz $themeQuizz = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $Jeux;
+    private ?string $jeux = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image;
+    private ?string $image = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $image_alt;
+    private ?string $image_alt = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Commentaires::class, mappedBy="jeuxQuizz")
+     *
+     * @var Collection<int, Commentaires>
      */
-    private $commentaires;
+    private Collection $commentaires;
 
     public function __construct()
     {
@@ -69,19 +74,19 @@ class JeuxQuizz
 
     public function getJeux(): ?string
     {
-        return $this->Jeux;
+        return $this->jeux;
     }
 
-    public function setJeux(string $Jeux): self
+    public function setJeux(string $jeux): self
     {
-        $this->Jeux = $Jeux;
+        $this->jeux = $jeux;
 
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->Jeux;
+        return $this->jeux;
     }
 
     public function getImage(): ?string

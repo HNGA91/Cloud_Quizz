@@ -14,47 +14,53 @@ class Commentaires
 {
     /**
      * @ORM\Id
+     *
      * @ORM\GeneratedValue
+     *
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="text")
      */
-    private $contenu;
+    private ?string $contenu = null;
 
     /**
      * @ORM\Column(type="datetime_immutable")
      */
-    private $created_at;
+    private ?\DateTimeImmutable $created_at = null;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $rgpd = null;
+    private bool $rgpd = false;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="commentaires")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
-    private $user;
+    private ?User $user = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=Commentaires::class, inversedBy="reponses")
      */
-    private $parent;
+    private ?self $parent = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=Commentaires::class, mappedBy="parent")
+     * @ORM\OneToMany(mappedBy="parent", targetEntity=Commentaires::class)
+     *
+     * @var Collection<int, self>
      */
-    private $reponses;
+    private Collection $reponses;
 
     /**
      * @ORM\ManyToOne(targetEntity=JeuxQuizz::class, inversedBy="commentaires")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
-    private $jeuxQuizz;
+    private ?JeuxQuizz $jeuxQuizz = null;
 
     public function __construct()
     {
@@ -78,7 +84,7 @@ class Commentaires
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->contenu;
     }

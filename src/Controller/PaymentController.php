@@ -2,25 +2,26 @@
 
 namespace App\Controller;
 
-use Stripe\Stripe;
 use App\Classes\Panier;
 use App\Entity\Commande;
+use App\Entity\ProduitBoutique;
+use App\Entity\User;
 use App\Repository\ProduitBoutiqueRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Stripe\Checkout\Session;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Stripe\Stripe;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PaymentController extends AbstractController
 {
-    /**
-     * @Route("/checkout", name="checkout")
-     */
-    
-    public function checkout($stripeSK, Panier $panier): Response
-    {
+    #[Route('/checkout', name: 'checkout')]
+    public function checkout(
+        string $stripeSK,
+        Panier $panier,
+    ): Response {
         Stripe::setApiKey($stripeSK);
 
         $session = Session::create([
@@ -31,45 +32,76 @@ class PaymentController extends AbstractController
                     'product_data' => [
                         'name' => 'Ma commande',
                     ],
-                'unit_amount' => $panier->getTotalePanier() * 100,
+                    'unit_amount' => (int) round($panier->getTotalePanier() * 100),
                 ],
                 'quantity' => $panier->getNombreArticlePanier(),
             ]],
             'mode' => 'payment',
-            'success_url' => $this->generateUrl('sucess_url', [], UrlGeneratorInterface::ABSOLUTE_URL),
-
-            'cancel_url' => $this->generateUrl('cancel_url', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            'success_url' => $this->generateUrl(
+                'success_url',
+                [],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            ),
+            'cancel_url' => $this->generateUrl(
+                'cancel_url',
+                [],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            ),
         ]);
 
-        return $this->redirect($session->url, 303);
+        return $this->redirect($session->url, Response::HTTP_SEE_OTHER);
     }
 
-    /**
-     * @Route("/sucess_url", name="sucess_url")
-     */
-    public function sucessUrl(Panier $panierService, ProduitBoutiqueRepository $produitBoutiqueRepository, EntityManagerInterface $entityManager): Response
-    {
-        $commande = new Commande();
-        $commande->setUser($this->getUser());
-        $commande->setReference(strval(random_int(0, 999999)));
-        $panier = $panierService->getPanier();
-        foreach ($panier as $productId => $quantity) {
-            $produit = $produitBoutiqueRepository->find($productId);
-            $commande->addProduit($produit);
+    #[Route('/success', name: 'success_url')]
+    public function successUrl(
+        Panier $panierService,
+        ProduitBoutiqueRepository $produitBoutiqueRepository,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Vous devez être connecté.');
         }
+
+        $panier = $panierService->getPanier();
+
+        if ([] === $panier) {
+            $this->addFlash('error', 'Votre panier est vide.');
+
+            return $this->redirectToRoute('panier');
+        }
+
+        $commande = new Commande();
+        $commande->setUser($user);
+        $commande->setReference((string) random_int(100000, 999999));
         $commande->setPrix($panierService->getTotalePanier());
         $commande->setCreatedAt(new \DateTimeImmutable());
+
+        foreach ($panier as $productId => $quantity) {
+            $produit = $produitBoutiqueRepository->find($productId);
+
+            if (!$produit instanceof ProduitBoutique) {
+                continue;
+            }
+
+            for ($i = 0; $i < $quantity; ++$i) {
+                $commande->addProduit($produit);
+            }
+        }
+
         $entityManager->persist($commande);
         $entityManager->flush();
-        
-        return $this->render('payment/sucess.html.twig', []);
+
+        $panierService->deletePanier();
+
+        return $this->render('payment/success.html.twig');
     }
 
-    /**
-     * @Route("/cancel_url", name="cancel_url")
-     */
+    #[Route('/cancel', name: 'cancel_url')]
     public function cancelUrl(): Response
     {
-        return $this->render('payment/cancel.html.twig', []);
+        return $this->render('payment/cancel.html.twig');
     }
 }

@@ -5,10 +5,10 @@ namespace App\Form;
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\IsTrue;
@@ -22,13 +22,13 @@ class RegistrationFormType extends AbstractType
         $builder
             ->add('email', EmailType::class)
             ->add('nom', TextType::class, [
-                'attr' => ['pattern' => '[a-zA-Z]{1,}']
+                'attr' => ['pattern' => '[a-zA-Z]{1,}'],
             ])
             ->add('prenom', TextType::class, [
-                'attr' => ['pattern' => '[a-zA-Z]{1,}']
+                'attr' => ['pattern' => '[a-zA-Z]{1,}'],
             ])
             ->add('pseudonyme', TextType::class, [
-                'attr' => ['pattern' => '[A-Za-z0-9]{1,}']
+                'attr' => ['pattern' => '[A-Za-z0-9]{1,}'],
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
@@ -56,7 +56,7 @@ class RegistrationFormType extends AbstractType
                     ]),
                 ],
                 'first_options' => ['label' => 'Mot de passe'],
-                'second_options' => ['label' => 'Confirmation du mot de passe']
+                'second_options' => ['label' => 'Confirmation du mot de passe'],
             ])
         ;
     }
