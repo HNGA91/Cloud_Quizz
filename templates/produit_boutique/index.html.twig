@@ -19,7 +19,6 @@
                 <th>Image_alt</th>
                 <th>Description</th>
                 <th>Prix</th>
-                <th>Référence</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -32,7 +31,6 @@
                 <td>{{ produit_boutique.imageAlt }}</td>
                 <td>{{ produit_boutique.resume }}</td>
                 <td>{{ produit_boutique.prix }}</td>
-                <td>{{ produit_boutique.reference }}</td>
                 <td>
                     <a href="{{ path('produit_boutique_show', {'id': produit_boutique.id}) }}" class="btn btn-primary">Consulter</a>
                     <a href="{{ path('produit_boutique_edit', {'id': produit_boutique.id}) }}" class="btn btn-warning m-2">Modifier</a>

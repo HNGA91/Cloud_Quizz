@@ -17,7 +17,6 @@ class ProduitBoutiqueType extends AbstractType
             ->add('image_alt')
             ->add('resume')
             ->add('prix')
-            ->add('reference')
         ;
     }
 
