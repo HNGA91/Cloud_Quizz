@@ -144,12 +144,15 @@ vendor/bin/phpstan analyse
 
 ---
 
-## 📄 Licence
+## License
 
-Projet propriétaire — usage éducatif.
+© 2026 Louis-Hervé N'Goma — Tous droits réservés.
+
+Ce projet est publié à titre de démonstration dans le cadre de mon portfolio. Le code peut être consulté librement, mais aucune réutilisation, modification ou distribution n'est autorisée sans mon accord écrit. Voir le fichier [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## 👤 Auteur
+## Auteur
 
-Développé par Hervé N'Goma dans le cadre d'un projet scolaire.
+**Louis-Hervé N'Goma** — Développeur Full Stack
+GitHub : [@HNGA91](https://github.com/HNGA91)
