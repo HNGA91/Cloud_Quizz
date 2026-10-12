@@ -4,6 +4,14 @@ framework:
     #csrf_protection: true
     http_method_override: false
 
+    # L'application tourne derrière le proxy de Render, qui termine le HTTPS
+    # et transmet la requête en HTTP avec des en-têtes X-Forwarded-*.
+    # Sans ce réglage, Symfony générerait des URL absolues en http:// (liens
+    # des emails, success_url de Stripe…) et ne verrait que l'IP du proxy.
+    # TRUSTED_PROXIES vaut "REMOTE_ADDR" sur Render, "127.0.0.1" en local.
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
+
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
     session:

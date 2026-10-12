@@ -7,6 +7,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,8 +23,12 @@ class ContactController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // On crée le mail
             $email = (new TemplatedEmail())
-                ->from($form->get('email')->getData())
-                ->to('contact@cloud-quizz.fr')
+                // L'expéditeur doit appartenir à un domaine vérifié chez Resend :
+                // on utilise donc notre adresse, et celle du visiteur en Reply-To
+                // pour pouvoir lui répondre directement depuis la messagerie.
+                ->from(Address::create($this->getParameter('app.email_from')))
+                ->to($this->getParameter('app.email_user'))
+                ->replyTo($form->get('email')->getData())
                 ->subject('Cloud Quizz contact')
                 ->htmlTemplate('emails/contactindex.html.twig')
                 ->context([

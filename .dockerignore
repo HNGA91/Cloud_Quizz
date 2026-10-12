@@ -1,0 +1,15 @@
+# Fichiers exclus de l'image Docker (comme un .gitignore, mais pour le build)
+.git
+.env.local
+.env.*.local
+.env.test
+vendor/
+var/
+public/bundles/
+public/uploads/
+node_modules/
+tests/
+docker-compose*.yaml
+.php-cs-fixer*
+phpstan*
+phpunit*

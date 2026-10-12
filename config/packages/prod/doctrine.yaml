@@ -1,4 +1,11 @@
 doctrine:
+    dbal:
+        # Connexion chiffrée à TiDB Cloud, avec vérification du certificat du serveur.
+        # MYSQL_SSL_CA pointe vers le magasin de certificats du système
+        # (/etc/ssl/certs/ca-certificates.crt), qui contient l'autorité ISRG Root X1.
+        options:
+            !php/const PDO::MYSQL_ATTR_SSL_CA: '%env(MYSQL_SSL_CA)%'
+            !php/const PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT: true
     orm:
         auto_generate_proxy_classes: false
         query_cache_driver:

@@ -48,6 +48,15 @@ class Commande
      */
     private ?float $prix = null;
 
+    /**
+     * Identifiant de la session Stripe Checkout ayant payé cette commande.
+     * Unique : une même session ne peut pas créer deux commandes (URL rejouée).
+     * Nullable : les commandes antérieures à ce champ n'en ont pas.
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, unique=true)
+     */
+    private ?string $stripeSessionId = null;
+
     public function __construct()
     {
         $this->produits = new ArrayCollection();
@@ -126,6 +135,18 @@ class Commande
     public function setPrix(float $prix): self
     {
         $this->prix = $prix;
+
+        return $this;
+    }
+
+    public function getStripeSessionId(): ?string
+    {
+        return $this->stripeSessionId;
+    }
+
+    public function setStripeSessionId(?string $stripeSessionId): self
+    {
+        $this->stripeSessionId = $stripeSessionId;
 
         return $this;
     }

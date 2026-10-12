@@ -172,7 +172,7 @@ class ResetPasswordController extends AbstractController
         }
 
         $email = (new TemplatedEmail())
-            ->from(new Address('contact@cloud-quizz.fr', 'Cloud Quizz'))
+            ->from(Address::create($this->getParameter('app.email_from')))
             ->to((string) $user->getEmail())
             ->subject('Réinitialisation de votre mot de passe')
             ->htmlTemplate('reset_password/email.html.twig')
