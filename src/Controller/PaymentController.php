@@ -4,10 +4,9 @@ namespace App\Controller;
 
 use App\Classes\Panier;
 use App\Entity\Commande;
-use App\Entity\ProduitBoutique;
+use App\Entity\LigneCommande;
 use App\Entity\User;
 use App\Repository\CommandeRepository;
-use App\Repository\ProduitBoutiqueRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Stripe\Checkout\Session;
 use Stripe\Exception\ApiErrorException;
@@ -32,22 +31,39 @@ class PaymentController extends AbstractController
             throw $this->createAccessDeniedException('Vous devez être connecté.');
         }
 
+        $detailPanier = $panier->getDetailPanier();
+
+        if ([] === $detailPanier) {
+            $this->addFlash('error', 'Votre panier est vide.');
+
+            return $this->redirectToRoute('panier');
+        }
+
+        // Une ligne Stripe par produit, avec son vrai prix unitaire et sa quantité.
+        // (Avant : le TOTAL du panier était envoyé comme prix unitaire, multiplié
+        // par le nombre d'articles → 3 articles = payé 3 fois le total.)
+        $lineItems = [];
+
+        foreach ($detailPanier as $item) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency' => 'eur',
+                    'product_data' => [
+                        'name' => $item['article']->getTitre(),
+                    ],
+                    'unit_amount' => (int) round($item['article']->getPrix() * 100),
+                ],
+                'quantity' => $item['quantity'],
+            ];
+        }
+
         Stripe::setApiKey($stripeSK);
 
         $session = Session::create([
             // Lie la session de paiement à l'utilisateur : vérifié au retour sur /success
             'client_reference_id' => (string) $user->getId(),
             'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'eur',
-                    'product_data' => [
-                        'name' => 'Ma commande',
-                    ],
-                    'unit_amount' => (int) round($panier->getTotalePanier() * 100),
-                ],
-                'quantity' => $panier->getNombreArticlePanier(),
-            ]],
+            'line_items' => $lineItems,
             'mode' => 'payment',
             // {CHECKOUT_SESSION_ID} est remplacé par Stripe par l'identifiant réel
             // de la session. Concaténé à la main (et non passé dans les paramètres
@@ -73,7 +89,6 @@ class PaymentController extends AbstractController
         string $stripeSK,
         Panier $panierService,
         CommandeRepository $commandeRepository,
-        ProduitBoutiqueRepository $produitBoutiqueRepository,
         EntityManagerInterface $entityManager,
     ): Response {
         /** @var User|null $user */
@@ -129,21 +144,14 @@ class PaymentController extends AbstractController
 
         $commande = new Commande();
         $commande->setUser($user);
-        $commande->setReference((string) random_int(100000, 999999));
+        $commande->setReference(Commande::genererReference());
         $commande->setPrix($panierService->getTotalePanier());
         $commande->setCreatedAt(new \DateTimeImmutable());
         $commande->setStripeSessionId($sessionId);
 
-        foreach ($panier as $productId => $quantity) {
-            $produit = $produitBoutiqueRepository->find($productId);
-
-            if (!$produit instanceof ProduitBoutique) {
-                continue;
-            }
-
-            for ($i = 0; $i < $quantity; ++$i) {
-                $commande->addProduit($produit);
-            }
+        // Une ligne par produit, avec titre et prix copiés au moment de l'achat
+        foreach ($panierService->getDetailPanier() as $item) {
+            $commande->addLigne(LigneCommande::depuisProduit($item['article'], $item['quantity']));
         }
 
         $entityManager->persist($commande);

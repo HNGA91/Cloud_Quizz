@@ -18,7 +18,7 @@ class QuestionQuizzController extends AbstractController
     public function index(QuestionQuizzRepository $questionQuizzRepository): Response
     {
         return $this->render('question_quizz/index.html.twig', [
-            'question_quizzs' => $questionQuizzRepository->findAll(),
+            'question_quizzs' => $questionQuizzRepository->findAvecChoix(),
         ]);
     }
 
@@ -26,10 +26,12 @@ class QuestionQuizzController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $questionQuizz = new QuestionQuizz();
+        $questionQuizz->completerChoixVides(); // 4 lignes à remplir
         $form = $this->createForm(QuestionQuizzType::class, $questionQuizz);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $questionQuizz->retirerChoixVides();
             $entityManager->persist($questionQuizz);
             $entityManager->flush();
 
@@ -53,10 +55,13 @@ class QuestionQuizzController extends AbstractController
     #[Route('/question-quizz/{id}/modifier', name: 'question_quizz_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, QuestionQuizz $questionQuizz, EntityManagerInterface $entityManager): Response
     {
+        $questionQuizz->completerChoixVides(); // complète jusqu'à 4 lignes
         $form = $this->createForm(QuestionQuizzType::class, $questionQuizz);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Une ligne vidée par l'admin est retirée, puis supprimée en base (orphanRemoval)
+            $questionQuizz->retirerChoixVides();
             $entityManager->flush();
 
             return $this->redirectToRoute('question_quizz_index', [], Response::HTTP_SEE_OTHER);

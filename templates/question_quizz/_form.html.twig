@@ -1,4 +1,21 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
+    {{ form_row(form.jeux_quizz) }}
+    {{ form_row(form.question) }}
+    {{ form_row(form.image) }}
+
+    <fieldset class="mb-3">
+        <legend class="col-form-label fw-bold">{{ form.choix.vars.label }}</legend>
+        {{ form_errors(form.choix) }}
+        {% for ligne in form.choix %}
+            <div class="row g-2 align-items-end mb-2">
+                <div class="col-12 col-md-1 fw-bold">{{ loop.index }}.</div>
+                <div class="col-12 col-md-4">{{ form_row(ligne.libelle) }}</div>
+                <div class="col-12 col-md-5">{{ form_row(ligne.image) }}</div>
+                <div class="col-12 col-md-2">{{ form_row(ligne.estCorrect) }}</div>
+            </div>
+        {% endfor %}
+    </fieldset>
+
+    {{ form_rest(form) }}
     <button class="btn btn-warning m-3">{{ button_label|default('Enregistrer') }}</button>
 {{ form_end(form) }}

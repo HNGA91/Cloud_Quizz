@@ -26,7 +26,7 @@
                 <td>{{ commande.id }}</td>
                 <td>{{ commande.reference }}</td>
                 <td>{{ commande.createdAt ? commande.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ commande.prix }}</td>
+                <td>{{ commande.prix|number_format(2, ',', ' ') }} €</td>
                 <td>
                     <a href="{{ path('commande_show', {'id': commande.id}) }}" class="btn btn-primary">Consulter</a>
                     <a href="{{ path('commande_edit', {'id': commande.id}) }}" class="btn btn-warning">Modifier</a>

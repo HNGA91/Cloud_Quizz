@@ -16,7 +16,6 @@ class CommandeType extends AbstractType
             ->add('createdAt')
             ->add('prix')
             ->add('user')
-            ->add('produits')
         ;
     }
 

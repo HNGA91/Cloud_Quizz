@@ -16,11 +16,7 @@
                 <th>Id</th>
                 <th>Jeux</th>
                 <th>Question</th>
-                <th>Choix1</th>
-                <th>Choix2</th>
-                <th>Choix3</th>
-                <th>Choix4</th>
-                <th>Reponse</th>
+                <th>Choix</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -30,11 +26,13 @@
                 <td>{{ question_quizz.id }}</td>
                 <td>{{ question_quizz.jeuxQuizz.Jeux }}</td>
                 <td>{{ question_quizz.question }}</td>
-                <td>{{ question_quizz.choix1 }}</td>
-                <td>{{ question_quizz.choix2 }}</td>
-                <td>{{ question_quizz.choix3 }}</td>
-                <td>{{ question_quizz.choix4 }}</td>
-                <td>{{ question_quizz.reponse }}</td>
+                <td>
+                    {% for choix in question_quizz.choix %}
+                        <div>{{ choix.estCorrect ? '✅' : '▫️' }} {{ choix.libelle }}{{ choix.image ? ' 🖼️' : '' }}</div>
+                    {% else %}
+                        <span class="text-danger">Aucun choix</span>
+                    {% endfor %}
+                </td>
                 <td>
                     <a href="{{ path('question_quizz_show', {'id': question_quizz.id}) }}" class="btn btn-primary">Consulter</a>
                     <a href="{{ path('question_quizz_edit', {'id': question_quizz.id}) }}" class="btn btn-warning">Modifier</a>
@@ -42,7 +40,7 @@
             </tr>
         {% else %}
             <tr>
-                <td colspan="8">Aucun enregistrement trouvé</td>
+                <td colspan="5">Aucun enregistrement trouvé</td>
             </tr>
         {% endfor %}
         </tbody>

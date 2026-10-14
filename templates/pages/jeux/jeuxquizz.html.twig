@@ -85,10 +85,17 @@
                         });
                     }
                 }
-               // affichage choix + prise en compte du choix
-                for (let i = 0; i < choices.length; i++) {
-                    this.elementShown("choice" + i, choices[i]);
-                    guessHandler("guess" + i, choices[i]);
+               // affichage choix + prise en compte du choix.
+               // 2, 3 ou 4 choix : les boutons en trop sont masqués.
+                for (let i = 0; i < 4; i++) {
+                    const bouton = document.getElementById("guess" + i);
+                    if (i < choices.length) {
+                        bouton.style.display = "";
+                        this.elementShown("choice" + i, choices[i]);
+                        guessHandler("guess" + i, choices[i]);
+                    } else {
+                        bouton.style.display = "none";
+                    }
                 }
             },
             progress: function () {

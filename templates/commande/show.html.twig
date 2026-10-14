@@ -26,7 +26,25 @@
             </tr>
             <tr>
                 <th>Prix</th>
-                <td>{{ commande.prix }}</td>
+                <td>{{ commande.prix|number_format(2, ',', ' ') }} €</td>
+            </tr>
+            <tr>
+                <th>Client</th>
+                <td>{{ commande.user ? commande.user.email : '—' }}</td>
+            </tr>
+            <tr>
+                <th>Paiement Stripe</th>
+                <td>{{ commande.stripeSessionId ?? '—' }}</td>
+            </tr>
+            <tr>
+                <th>Articles</th>
+                <td>
+                    {% for ligne in commande.lignes %}
+                        <div>{{ ligne.quantite }} × {{ ligne.titre }} — {{ ligne.prixUnitaire|number_format(2, ',', ' ') }} € l'unité</div>
+                    {% else %}
+                        —
+                    {% endfor %}
+                </td>
             </tr>
         </tbody>
     </table>

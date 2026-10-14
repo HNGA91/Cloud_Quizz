@@ -71,12 +71,14 @@
 									{% for commande in app.user.commandes %}
                                         <tr>
 										    <td>    
-											    {% for produit in commande.produits %}
-											        <div>{{ produit.titre }}</div>
+											    {% for ligne in commande.lignes %}
+											        <div>{{ ligne.quantite }} × {{ ligne.titre }}</div>
+											    {% else %}
+											        <div class="text-muted">—</div>
 											    {% endfor %}
 											</td>
                                             <td> {{ commande.reference }} </td>
-											<td> {{ commande.prix }} </td>
+											<td> {{ commande.prix|number_format(2, ',', ' ') }} € </td>
                                             <td> {{ commande.createdAt ? commande.createdAt|date("d/m/Y H:i") : '' }}</td>
 										</tr>
 									{% else %}

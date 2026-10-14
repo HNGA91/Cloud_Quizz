@@ -2,15 +2,13 @@
 
 namespace App\Repository;
 
+use App\Entity\JeuxQuizz;
 use App\Entity\QuestionQuizz;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method QuestionQuizz|null find($id, $lockMode = null, $lockVersion = null)
- * @method QuestionQuizz|null findOneBy(array $criteria, array $orderBy = null)
- * @method QuestionQuizz[]    findAll()
- * @method QuestionQuizz[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<QuestionQuizz>
  */
 class QuestionQuizzRepository extends ServiceEntityRepository
 {
@@ -19,32 +17,25 @@ class QuestionQuizzRepository extends ServiceEntityRepository
         parent::__construct($registry, QuestionQuizz::class);
     }
 
-    // /**
-    //  * @return QuestionQuizz[] Returns an array of QuestionQuizz objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * Questions avec leurs choix chargés en une seule requête (JOIN), au lieu
+     * d'une requête supplémentaire par question (problème « N+1 »).
+     *
+     * @return QuestionQuizz[]
+     */
+    public function findAvecChoix(?JeuxQuizz $quizz = null): array
     {
-        return $this->createQueryBuilder('q')
-            ->andWhere('q.exampleField = :val')
-            ->setParameter('val', $value)
+        $qb = $this->createQueryBuilder('q')
+            ->addSelect('c', 'j')
+            ->leftJoin('q.choix', 'c')
+            ->join('q.jeux_quizz', 'j')
             ->orderBy('q.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+            ->addOrderBy('c.position', 'ASC');
 
-    /*
-    public function findOneBySomeField($value): ?QuestionQuizz
-    {
-        return $this->createQueryBuilder('q')
-            ->andWhere('q.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (null !== $quizz) {
+            $qb->andWhere('q.jeux_quizz = :quizz')->setParameter('quizz', $quizz);
+        }
+
+        return $qb->getQuery()->getResult();
     }
-    */
 }

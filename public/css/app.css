@@ -370,14 +370,17 @@ a {
 .choices-jeux {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center; /* un 3e choix seul est centré sous les deux premiers */
     margin: 3rem auto 3rem;
-    width: 425px;
+    width: 100%;
+    max-width: 520px;
 }
 
 .button-jeux {
-    flex: 1 0 45%;
-    width: 200px;
-    height: 80px;
+    /* toujours une demi-largeur, même pour un choix seul sur sa ligne */
+    flex: 0 0 calc(50% - .8rem);
+    min-height: 80px; /* la hauteur s'adapte aux libellés longs */
+    padding: .5rem;
     border-radius: 5px;
     cursor: pointer;
     border: none;
@@ -386,6 +389,7 @@ a {
     background: #cbcccf;
     user-select: none;
     font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
 body .container  .choices-jeux .button-jeux:hover {
@@ -400,6 +404,7 @@ body .container  .choices-jeux .button-jeux:active {
 
 .p-jeux {
     font-size: 1.3rem;
+    margin: 0;
 }
 
 #progress {

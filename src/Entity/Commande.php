@@ -6,10 +6,13 @@ use App\Repository\CommandeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=CommandeRepository::class)
  */
+#[UniqueEntity('reference', message: 'Cette référence de commande existe déjà.')]
 class Commande
 {
     /**
@@ -22,8 +25,12 @@ class Commande
     private ?int $id = null;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * Unique : deux commandes ne peuvent pas partager la même référence.
+     *
+     * @ORM\Column(type="string", length=32, unique=true)
      */
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 32)]
     private ?string $reference = null;
 
     /**
@@ -34,9 +41,15 @@ class Commande
     private ?User $user = null;
 
     /**
-     * @var Collection<int, ProduitBoutique>
+     * Les lignes de la commande (produit, quantité, prix au moment de l'achat).
+     * cascade persist : persister la commande enregistre aussi ses lignes.
+     * orphanRemoval : une ligne retirée de la collection est supprimée en base.
+     *
+     * @ORM\OneToMany(targetEntity=LigneCommande::class, mappedBy="commande", cascade={"persist"}, orphanRemoval=true)
+     *
+     * @var Collection<int, LigneCommande>
      */
-    private Collection $produits;
+    private Collection $lignes;
 
     /**
      * @ORM\Column(type="datetime_immutable")
@@ -59,7 +72,7 @@ class Commande
 
     public function __construct()
     {
-        $this->produits = new ArrayCollection();
+        $this->lignes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -92,27 +105,50 @@ class Commande
     }
 
     /**
-     * @return Collection|ProduitBoutique[]
+     * @return Collection<int, LigneCommande>
      */
-    public function getProduits(): Collection
+    public function getLignes(): Collection
     {
-        return $this->produits;
+        return $this->lignes;
     }
 
-    public function addProduit(ProduitBoutique $produit): self
+    public function addLigne(LigneCommande $ligne): self
     {
-        if (!$this->produits->contains($produit)) {
-            $this->produits[] = $produit;
+        if (!$this->lignes->contains($ligne)) {
+            $this->lignes[] = $ligne;
+            $ligne->setCommande($this);
         }
 
         return $this;
     }
 
-    public function removeProduit(ProduitBoutique $produit): self
+    public function removeLigne(LigneCommande $ligne): self
     {
-        $this->produits->removeElement($produit);
+        $this->lignes->removeElement($ligne);
 
         return $this;
+    }
+
+    /**
+     * Total recalculé à partir des lignes (sert de contrôle face au prix enregistré).
+     */
+    public function getTotalLignes(): float
+    {
+        $total = 0.0;
+
+        foreach ($this->lignes as $ligne) {
+            $total += $ligne->getSousTotal();
+        }
+
+        return $total;
+    }
+
+    /**
+     * Référence lisible et non devinable, ex. CQ-20261014-3F9A1C.
+     */
+    public static function genererReference(): string
+    {
+        return sprintf('CQ-%s-%s', date('Ymd'), strtoupper(bin2hex(random_bytes(3))));
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable

@@ -71,7 +71,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $commentaires;
 
     /**
+     * Les plus récentes d'abord (page « Mon compte »).
+     *
      * @ORM\OneToMany(mappedBy="user", targetEntity=Commande::class)
+     *
+     * @ORM\OrderBy({"createdAt": "DESC"})
      *
      * @var Collection<int, Commande>
      */

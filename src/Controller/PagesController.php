@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Choix;
 use App\Entity\JeuxQuizz;
+use App\Entity\QuestionQuizz;
 use App\Entity\ThemeQuizz;
 use App\Entity\User;
 use App\Form\EditProfileType;
@@ -144,9 +146,7 @@ class PagesController extends AbstractController
     #[Route('/jeux/quizz/{id}/details', name: 'quizz_details')]
     public function quizzDetails(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository): Response
     {
-        $questions = $questionQuizzRepository->findBy([
-            'jeux_quizz' => $quizz,
-        ]);
+        $questions = $questionQuizzRepository->findAvecChoix($quizz);
 
         if ($questions === []) {
             return new JsonResponse([
@@ -158,26 +158,14 @@ class PagesController extends AbstractController
             'id' => $quizz->getId(),
             'name' => $quizz->getJeux(),
             'count' => count($questions),
-            'question' => [
-                'id' => $questions[0]->getId(),
-                'text' => $questions[0]->getQuestion(),
-                'choices' => [
-                    $questions[0]->getChoix1(),
-                    $questions[0]->getChoix2(),
-                    $questions[0]->getChoix3(),
-                    $questions[0]->getChoix4(),
-                ],
-                'answer' => $questions[0]->getReponse(),
-            ],
+            'question' => $this->questionEnTableau($questions[0]),
         ]);
     }
 
     #[Route('/jeux/quizz/{id}/questions/{questId}/next', name: 'quizz_next')]
     public function quizzQuestionSuivante(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository, int $questId): Response
     {
-        $questions = $questionQuizzRepository->findBy([
-            'jeux_quizz' => $quizz,
-        ]);
+        $questions = $questionQuizzRepository->findAvecChoix($quizz);
 
         $questionSuivante = null;
 
@@ -195,19 +183,30 @@ class PagesController extends AbstractController
         }
 
         if ($questionSuivante) {
-            return new JsonResponse([
-                'id' => $questionSuivante->getId(),
-                'text' => $questionSuivante->getQuestion(),
-                'choices' => [
-                    $questionSuivante->getChoix1(),
-                    $questionSuivante->getChoix2(),
-                    $questionSuivante->getChoix3(),
-                    $questionSuivante->getChoix4(),
-                ],
-                'answer' => $questionSuivante->getReponse(),
-            ]);
+            return new JsonResponse($this->questionEnTableau($questionSuivante));
         }
 
         return new JsonResponse(null);
+    }
+
+    /**
+     * Format JSON d'une question pour quizz.js.
+     * Lot C : la bonne réponse ('answer') ne sera plus envoyée au navigateur,
+     * elle sera vérifiée par le serveur.
+     *
+     * @return array<string, mixed>
+     */
+    private function questionEnTableau(QuestionQuizz $question): array
+    {
+        $choix = $question->getChoix()->toArray();
+
+        return [
+            'id' => $question->getId(),
+            'text' => $question->getQuestion(),
+            'image' => $question->getImage(),
+            'choices' => array_map(static fn (Choix $c): string => (string) $c->getLibelle(), $choix),
+            'images' => array_map(static fn (Choix $c): ?string => $c->getImage(), $choix),
+            'answer' => $question->getBonChoix()?->getLibelle(),
+        ];
     }
 }

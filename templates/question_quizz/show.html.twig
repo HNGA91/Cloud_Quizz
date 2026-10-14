@@ -25,25 +25,25 @@
                 <td>{{ question_quizz.question }}</td>
             </tr>
             <tr>
-                <th>Choix1</th>
-                <td>{{ question_quizz.choix1 }}</td>
+                <th>Image</th>
+                <td>
+                    {% if question_quizz.image %}
+                        <img src="{{ asset(question_quizz.image) }}" alt="" style="max-height: 80px;">
+                    {% else %}—{% endif %}
+                </td>
             </tr>
-            <tr>
-                <th>Choix2</th>
-                <td>{{ question_quizz.choix2 }}</td>
-            </tr>
-            <tr>
-                <th>Choix3</th>
-                <td>{{ question_quizz.choix3 }}</td>
-            </tr>
-            <tr>
-                <th>Choix4</th>
-                <td>{{ question_quizz.choix4 }}</td>
-            </tr>
-            <tr>
-                <th>Reponse</th>
-                <td>{{ question_quizz.reponse }}</td>
-            </tr>
+            {% for choix in question_quizz.choix %}
+                <tr>
+                    <th>Choix {{ loop.index }}</th>
+                    <td>
+                        {% if choix.image %}
+                            <img src="{{ asset(choix.image) }}" alt="{{ choix.libelle }}" style="max-height: 40px;" class="me-2">
+                        {% endif %}
+                        {{ choix.libelle }}
+                        {% if choix.estCorrect %}<span class="badge bg-success ms-2">Bonne réponse</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
