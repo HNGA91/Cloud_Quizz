@@ -51,17 +51,14 @@ COPY . .
 
 # 9. Finalisation :
 #    - autoloader optimisé (classmap) pour la production
-#    - assets:install : copie les assets des bundles (elFinder…) dans public/bundles
-#    - ckeditor:install : télécharge CKEditor dans public/bundles (ignoré par Git)
+#    - assets:install : copie les assets publics des bundles dans public/bundles
 #    - cache:warmup : prépare le cache Symfony pendant le build, pas au 1er visiteur
 #    - chown : Apache tourne avec l'utilisateur www-data, qui doit pouvoir écrire
-#      dans var/ (cache, logs) et public/uploads (images envoyées via elFinder)
+#      dans var/ (cache, logs)
 RUN composer dump-autoload --no-dev --classmap-authoritative \
     && php bin/console assets:install public --no-interaction \
-    && php bin/console ckeditor:install --clear=drop --no-interaction \
     && php bin/console cache:warmup \
-    && mkdir -p public/uploads \
-    && chown -R www-data:www-data var public/uploads
+    && chown -R www-data:www-data var
 
 # 10. Démarrage : Apache au premier plan (le conteneur vit tant qu'Apache tourne)
 CMD ["apache2-foreground"]

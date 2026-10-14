@@ -51,9 +51,14 @@
 	<script src="{{ asset('javascript/quizz.js') }}" type="text/javascript"></script>
 	<script>
 	    const display = {
+            // textContent : le texte est affiché tel quel, jamais interprété
+            // comme du HTML (une question contenant "<script>" reste du texte)
             elementShown: function (id, text) {
-                let element = document.getElementById(id);
-                element.innerHTML = text;
+                document.getElementById(id).textContent = text;
+            },
+            // innerHTML uniquement pour le bloc de fin, construit par notre code
+            elementHTML: function (id, html) {
+                document.getElementById(id).innerHTML = html;
             },
             endQuiz: function () {
                 endQuizHTML = `
@@ -65,7 +70,7 @@
 				        <a href="{{ path('theme_quizz_page', {id: themeQuizz.id}) }}" class="btn btn-jeuxquizz btn-danger">Retour aux quizz</a>
 		            </div>
                 </div>`;
-                this.elementShown("quiz", endQuizHTML);
+                this.elementHTML("quiz", endQuizHTML);
             },
             question: function () {
                 this.elementShown("question", quiz.getCurrentQuestion().text);

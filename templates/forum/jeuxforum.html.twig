@@ -20,7 +20,7 @@
 						                    <p class="text-white">🚀 {{ commentaire.user.pseudonyme }} le {{ commentaire.createdAt|date("d/m/Y H:i") }}</p>
 					                    </div>
 					                    <div class="card-body bg-light">
-                                            <div>{{ commentaire.contenu|raw }}</div>
+                                            <div>{{ commentaire.contenu|nl2br }}</div>
                                             {% if app.user %}
                                                 <p><a href="#ajout-commentaire" data-reply data-id="{{ commentaire.id }}" class="btn btn-primary">Répondre</a></p>
                                             {% endif %}
@@ -36,7 +36,7 @@
 						                            <p class="text-white">Réponse de 🚀 {{ reponse.user.pseudonyme }} le {{ reponse.createdAt|date("d/m/Y H:i") }}</p>
 					                            </div>
 					                            <div class="card-body bg-light">
-                                                    <div>{{ commentaire.contenu|raw }}</div>
+                                                    <div>{{ commentaire.contenu|nl2br }}</div>
                                                 </div>
 						                    </div>
                                         </div>
