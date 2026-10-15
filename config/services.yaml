@@ -8,6 +8,7 @@ parameters:
     # Adresses e-mail (voir EMAIL_FROM / EMAIL_USER dans .env)
     app.email_from: '%env(EMAIL_FROM)%'   # Expéditeur de tous les e-mails envoyés
     app.email_user: '%env(EMAIL_USER)%'   # Destinataire des messages du formulaire de contact
+    app.assets_version: 'local'           # Version des CSS/JS hors Render (voir framework.yaml)
 
 services:
     # default configuration for services in *this* file

@@ -15,7 +15,15 @@
                         <img src="{{ asset(theme_quizz.image) }}" class="card-img-top" alt="{{ theme_quizz.ImageAlt }}">
                         <div class="card-body">
                             <p class="card-text"></p>
-                            <a href="{{ path('theme_quizz_page', {id: theme_quizz.id}) }}" class="btn btn-primary d-flex justify-content-center">{{ theme_quizz.titre }}</a>
+                            {% if theme_quizz.id in themes_jouables %}
+                                <a href="{{ path('theme_quizz_page', {id: theme_quizz.id}) }}" class="btn btn-primary d-flex justify-content-center">{{ theme_quizz.titre }}</a>
+                            {% else %}
+                                {# Pas de lien : un bouton désactivé ne mène nulle part #}
+                                <button type="button" class="btn btn-danger btn-indisponible w-100" disabled>
+                                    {{ theme_quizz.titre }}
+                                    <span class="d-block small">indisponible</span>
+                                </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -2,15 +2,13 @@
 
 namespace App\Repository;
 
+use App\Entity\QuestionQuizz;
 use App\Entity\ThemeQuizz;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method ThemeQuizz|null find($id, $lockMode = null, $lockVersion = null)
- * @method ThemeQuizz|null findOneBy(array $criteria, array $orderBy = null)
- * @method ThemeQuizz[]    findAll()
- * @method ThemeQuizz[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<ThemeQuizz>
  */
 class ThemeQuizzRepository extends ServiceEntityRepository
 {
@@ -19,32 +17,24 @@ class ThemeQuizzRepository extends ServiceEntityRepository
         parent::__construct($registry, ThemeQuizz::class);
     }
 
-    // /**
-    //  * @return ThemeQuizz[] Returns an array of ThemeQuizz objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * Identifiants des thèmes jouables : ceux qui ont au moins un quizz
+     * contenant au moins une question avec une bonne réponse.
+     * Calculé en une requête, pour tous les thèmes de la page d'accueil.
+     *
+     * @return int[]
+     */
+    public function findIdsJouables(): array
     {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('t.id', 'ASC')
-            ->setMaxResults(10)
+        $ids = $this->getEntityManager()->createQueryBuilder()
+            ->select('DISTINCT IDENTITY(j.themeQuizz) AS id')
+            ->from(QuestionQuizz::class, 'q')
+            ->join('q.jeux_quizz', 'j')
+            ->join('q.choix', 'c')
+            ->where('c.estCorrect = true')
             ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+            ->getSingleColumnResult();
 
-    /*
-    public function findOneBySomeField($value): ?ThemeQuizz
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return array_map('intval', $ids);
     }
-    */
 }

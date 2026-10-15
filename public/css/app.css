@@ -390,11 +390,11 @@ a {
     user-select: none;
     font-weight: 600;
     overflow-wrap: anywhere;
+    transition: background-color .2s, color .2s; /* rouge/vert visibles tout de suite */
 }
 
 body .container  .choices-jeux .button-jeux:hover {
     background: #ffa502;
-    transition: .5s;
 }
 
 body .container  .choices-jeux .button-jeux:active {
@@ -405,6 +405,65 @@ body .container  .choices-jeux .button-jeux:active {
 .p-jeux {
     font-size: 1.3rem;
     margin: 0;
+}
+
+/* Après la réponse : vert = bonne réponse, rouge = choix du joueur s'il est faux */
+body .container .choices-jeux .button-jeux:disabled {
+    opacity: 1; /* Bootstrap grise les boutons désactivés : on garde les couleurs lisibles */
+    cursor: default;
+    transform: none;
+}
+
+body .container .choices-jeux .button-jeux.choix-correct {
+    background: #2ecc71;
+    color: #fff;
+    box-shadow: 0 0 0 3px #1e8449 inset;
+}
+
+body .container .choices-jeux .button-jeux.choix-faux {
+    background: #e74c3c;
+    color: #fff;
+    animation: secousse .35s;
+}
+
+body .container .choices-jeux .button-jeux.choix-neutre {
+    background: #e3e4e6;
+    color: #6c757d;
+}
+
+@keyframes secousse {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* Choix avec image (drapeaux) */
+.choix-image-jeux {
+    display: block;
+    width: 100%;
+    max-height: 110px;
+    object-fit: contain;
+    margin: 0 auto .3rem;
+}
+
+.question-image-jeux {
+    max-width: 260px;
+    max-height: 170px;
+    margin-top: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.feedback-jeux {
+    min-height: 1.6em;
+    font-size: 1.3rem;
+}
+
+/* Thème ou quizz sans question jouable */
+.btn-indisponible:disabled {
+    opacity: 1;
+    color: #fff;
+    cursor: not-allowed;
 }
 
 #progress {

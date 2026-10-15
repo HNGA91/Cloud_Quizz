@@ -6,7 +6,7 @@
 <main>
     <div class="container">
         <div class="mt-5 pt-2">
-            <h3 class="d-flex justify-content-center">Choisissez un thème et testez vos connaissances !</h3>
+            <h3 class="d-flex justify-content-center">{{ themeQuizz.titre }} : choisissez un quizz et testez vos connaissances !</h3>
         </div>
         <div class="row mt-5 g-4 g-lg-5">
             {% for jeux_quizz in jeux_quizzs %}
@@ -15,7 +15,14 @@
                         <img src="{{ asset(jeux_quizz.image) }}" class="card-img-top" alt="{{ jeux_quizz.ImageAlt }}">
                         <div class="card-body">
                             <p class="card-text"></p>
-                            <a href="{{ path('jeux_quizz_page', {id: jeux_quizz.id}) }}" class="btn btn-primary d-flex justify-content-center">{{ jeux_quizz.Jeux }}</a>
+                            {% if jeux_quizz.id in quizz_jouables %}
+                                <a href="{{ path('jeux_quizz_page', {id: jeux_quizz.id}) }}" class="btn btn-primary d-flex justify-content-center">{{ jeux_quizz.Jeux }}</a>
+                            {% else %}
+                                <button type="button" class="btn btn-danger btn-indisponible w-100" disabled>
+                                    {{ jeux_quizz.Jeux }}
+                                    <span class="d-block small">indisponible</span>
+                                </button>
+                            {% endif %}
                             <a href="{{ path('jeux_forum', {id: jeux_quizz.id }) }}" class="mt-2 btn btn-primary d-flex justify-content-center">Forum</a>
                         </div>
                     </div>

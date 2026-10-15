@@ -3,14 +3,13 @@
 namespace App\Repository;
 
 use App\Entity\JeuxQuizz;
+use App\Entity\QuestionQuizz;
+use App\Entity\ThemeQuizz;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method JeuxQuizz|null find($id, $lockMode = null, $lockVersion = null)
- * @method JeuxQuizz|null findOneBy(array $criteria, array $orderBy = null)
- * @method JeuxQuizz[]    findAll()
- * @method JeuxQuizz[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<JeuxQuizz>
  */
 class JeuxQuizzRepository extends ServiceEntityRepository
 {
@@ -19,32 +18,26 @@ class JeuxQuizzRepository extends ServiceEntityRepository
         parent::__construct($registry, JeuxQuizz::class);
     }
 
-    // /**
-    //  * @return JeuxQuizz[] Returns an array of JeuxQuizz objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * Identifiants des quizz jouables (au moins une question avec une bonne réponse),
+     * éventuellement limités à un thème.
+     *
+     * @return int[]
+     */
+    public function findIdsJouables(?ThemeQuizz $theme = null): array
     {
-        return $this->createQueryBuilder('j')
-            ->andWhere('j.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('j.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('DISTINCT IDENTITY(q.jeux_quizz) AS id')
+            ->from(QuestionQuizz::class, 'q')
+            ->join('q.choix', 'c')
+            ->where('c.estCorrect = true');
 
-    /*
-    public function findOneBySomeField($value): ?JeuxQuizz
-    {
-        return $this->createQueryBuilder('j')
-            ->andWhere('j.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (null !== $theme) {
+            $qb->join('q.jeux_quizz', 'j')
+                ->andWhere('j.themeQuizz = :theme')
+                ->setParameter('theme', $theme);
+        }
+
+        return array_map('intval', $qb->getQuery()->getSingleColumnResult());
     }
-    */
 }

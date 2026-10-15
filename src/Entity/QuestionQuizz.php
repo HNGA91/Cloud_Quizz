@@ -150,6 +150,18 @@ class QuestionQuizz
     }
 
     /**
+     * Jouable = 2 à 4 choix dont une seule bonne réponse.
+     * Une question incomplète (ex. reprise de l'ancien modèle) n'est jamais proposée au joueur.
+     */
+    public function estJouable(): bool
+    {
+        $nombre = $this->choix->count();
+        $bonnes = $this->choix->filter(static fn (Choix $c): bool => $c->isEstCorrect())->count();
+
+        return $nombre >= self::NB_CHOIX_MIN && $nombre <= self::NB_CHOIX_MAX && 1 === $bonnes;
+    }
+
+    /**
      * Complète avec des lignes vides jusqu'à 4, pour le formulaire d'administration.
      * Les lignes laissées vides sont retirées par retirerChoixVides().
      */

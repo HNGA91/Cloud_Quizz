@@ -20,6 +20,14 @@ framework:
         cookie_samesite: lax
         storage_factory_id: session.storage.factory.native
 
+    # Version ajoutée aux URL générées par asset() : css/app.css?v=abc123.
+    # Quand la version change, le navigateur télécharge les nouveaux CSS/JS au lieu
+    # de garder l'ancienne copie en cache. Sur Render, RENDER_GIT_COMMIT (fourni
+    # automatiquement) change à chaque déploiement ; en local, valeur fixe.
+    assets:
+        version: '%env(default:app.assets_version:RENDER_GIT_COMMIT)%'
+        version_format: '%%s?v=%%s'
+
     #esi: true
     #fragments: true
     php_errors:

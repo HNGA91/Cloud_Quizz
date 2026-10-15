@@ -15,6 +15,7 @@ use App\Repository\QuestionQuizzRepository;
 use App\Repository\ThemeQuizzRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +29,8 @@ class PagesController extends AbstractController
     {
         return $this->render('pages/home.html.twig', [
             'theme_quizzs' => $themeQuizzRepository->findAll(),
+            // Un thème sans quizz jouable affiche un bouton « indisponible »
+            'themes_jouables' => $themeQuizzRepository->findIdsJouables(),
         ]);
     }
 
@@ -59,6 +62,7 @@ class PagesController extends AbstractController
             'jeux_quizzs' => $jeuxQuizzRepository->findBy([
                 'themeQuizz' => $themeQuizz,
             ]),
+            'quizz_jouables' => $jeuxQuizzRepository->findIdsJouables($themeQuizz),
         ]);
     }
 
@@ -123,11 +127,14 @@ class PagesController extends AbstractController
     }
 
     #[Route('/jeux/quizz/{id}', name: 'jeux_quizz_page')]
-    public function jeuxQuizzPage(ThemeQuizz $themeQuizz, JeuxQuizz $jeuxQuizz): Response
+    public function jeuxQuizzPage(JeuxQuizz $jeuxQuizz, JeuxQuizzRepository $jeuxQuizzRepository): Response
     {
+        // Avant : un paramètre ThemeQuizz était résolu avec le même {id} que le quizz,
+        // donc le thème « n° id du quizz » (mauvais thème, ou 404 s'il n'existe pas).
         return $this->render('pages/jeux/jeuxquizz.html.twig', [
-            'themeQuizz' => $themeQuizz,
+            'themeQuizz' => $jeuxQuizz->getThemeQuizz(),
             'jeuxQuizz' => $jeuxQuizz,
+            'jouable' => in_array($jeuxQuizz->getId(), $jeuxQuizzRepository->findIdsJouables(), true),
         ]);
     }
 
@@ -143,10 +150,18 @@ class PagesController extends AbstractController
         return $this->render('pages/conf.html.twig');
     }
 
-    #[Route('/jeux/quizz/{id}/details', name: 'quizz_details')]
-    public function quizzDetails(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository): Response
+    /*
+     * API du jeu (appelée par public/javascript/quizz.js)
+     *
+     * La bonne réponse n'est JAMAIS envoyée avec la question : le navigateur envoie
+     * le choix du joueur et c'est le serveur qui dit s'il est juste. Avant, la réponse
+     * était lisible dans les outils de développement (onglet Réseau).
+     */
+
+    #[Route('/jeux/quizz/{id}/details', name: 'quizz_details', methods: ['GET'])]
+    public function quizzDetails(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository): JsonResponse
     {
-        $questions = $questionQuizzRepository->findAvecChoix($quizz);
+        $questions = $this->questionsJouables($quizz, $questionQuizzRepository);
 
         if ($questions === []) {
             return new JsonResponse([
@@ -162,51 +177,133 @@ class PagesController extends AbstractController
         ]);
     }
 
-    #[Route('/jeux/quizz/{id}/questions/{questId}/next', name: 'quizz_next')]
-    public function quizzQuestionSuivante(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository, int $questId): Response
+    #[Route('/jeux/quizz/{id}/questions/{questId}/next', name: 'quizz_next', methods: ['GET'])]
+    public function quizzQuestionSuivante(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository, int $questId): JsonResponse
     {
-        $questions = $questionQuizzRepository->findAvecChoix($quizz);
+        $questions = $this->questionsJouables($quizz, $questionQuizzRepository);
 
-        $questionSuivante = null;
-
-        $count = count($questions);
-
-        for ($i = 0; $i < $count; ++$i) {
-            if ($questions[$i]->getId() === $questId) {
-                $questionSuivanteIndex = $i + 1;
-
-                if ($questionSuivanteIndex < $count) {
-                    $questionSuivante = $questions[$questionSuivanteIndex];
-                }
-                break;
+        foreach ($questions as $i => $question) {
+            if ($question->getId() === $questId && isset($questions[$i + 1])) {
+                return new JsonResponse($this->questionEnTableau($questions[$i + 1]));
             }
         }
 
-        if ($questionSuivante) {
-            return new JsonResponse($this->questionEnTableau($questionSuivante));
+        // Plus de question : fin du quizz
+        return new JsonResponse(['fin' => true]);
+    }
+
+    #[Route('/jeux/quizz/{id}/questions/{questId}/reponse', name: 'quizz_reponse', methods: ['POST'])]
+    public function quizzReponse(
+        JeuxQuizz $quizz,
+        int $questId,
+        Request $request,
+        QuestionQuizzRepository $questionQuizzRepository,
+    ): JsonResponse {
+        $question = $questionQuizzRepository->find($questId);
+
+        // La question doit appartenir à CE quizz (sinon : identifiants inventés)
+        if (!$question instanceof QuestionQuizz || $question->getJeuxQuizz() !== $quizz || !$question->estJouable()) {
+            return new JsonResponse(['error' => 'Question introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(null);
+        $donnees = json_decode($request->getContent(), true);
+        $choixId = is_array($donnees) && is_int($donnees['choix'] ?? null) ? $donnees['choix'] : null;
+
+        $choisi = null;
+        foreach ($question->getChoix() as $choix) {
+            if ($choix->getId() === $choixId) {
+                $choisi = $choix;
+            }
+        }
+
+        if (null === $choisi) {
+            return new JsonResponse(['error' => 'Choix invalide'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $libelles = [];
+        foreach ($question->getChoix() as $choix) {
+            $libelles[$choix->getId()] = $choix->getLibelle();
+        }
+
+        return new JsonResponse([
+            'correct' => $choisi->isEstCorrect(),
+            'bonChoix' => $question->getBonChoix()?->getId(),
+            // Les libellés des choix-images ne sont révélés qu'après la réponse
+            'libelles' => $libelles,
+        ]);
+    }
+
+    /*
+     * Images du jeu servies sous une adresse neutre (/jeux/choix/150/image) :
+     * l'adresse réelle (…/drapeaux/irlande.svg) donnerait la réponse à qui
+     * survole ou ouvre l'image.
+     */
+
+    #[Route('/jeux/choix/{id}/image', name: 'quizz_choix_image', methods: ['GET'])]
+    public function imageChoix(Choix $choix): Response
+    {
+        return $this->fichierImage($choix->getImage());
+    }
+
+    #[Route('/jeux/question/{id}/image', name: 'quizz_question_image', methods: ['GET'])]
+    public function imageQuestion(QuestionQuizz $question): Response
+    {
+        return $this->fichierImage($question->getImage());
+    }
+
+    private function fichierImage(?string $chemin): Response
+    {
+        $dossierImages = realpath($this->getParameter('kernel.project_dir').'/public/images');
+        $fichier = null === $chemin ? false : realpath($this->getParameter('kernel.project_dir').'/public/'.$chemin);
+
+        // Le fichier doit exister ET se trouver dans public/images (pas de « ../ »)
+        if (false === $fichier || false === $dossierImages || !str_starts_with($fichier, $dossierImages.DIRECTORY_SEPARATOR)) {
+            throw $this->createNotFoundException('Image introuvable.');
+        }
+
+        $reponse = new BinaryFileResponse($fichier);
+        $reponse->setPublic();
+        $reponse->setMaxAge(86400); // mise en cache un jour par le navigateur
+
+        return $reponse;
     }
 
     /**
-     * Format JSON d'une question pour quizz.js.
-     * Lot C : la bonne réponse ('answer') ne sera plus envoyée au navigateur,
-     * elle sera vérifiée par le serveur.
+     * Questions du quizz qui peuvent être jouées, dans l'ordre (les incomplètes sont ignorées).
+     *
+     * @return list<QuestionQuizz>
+     */
+    private function questionsJouables(JeuxQuizz $quizz, QuestionQuizzRepository $questionQuizzRepository): array
+    {
+        return array_values(array_filter(
+            $questionQuizzRepository->findAvecChoix($quizz),
+            static fn (QuestionQuizz $q): bool => $q->estJouable()
+        ));
+    }
+
+    /**
+     * Question envoyée au navigateur : texte, image, choix mélangés, sans la réponse.
      *
      * @return array<string, mixed>
      */
     private function questionEnTableau(QuestionQuizz $question): array
     {
         $choix = $question->getChoix()->toArray();
+        shuffle($choix); // la bonne réponse n'est pas toujours au même endroit
 
         return [
             'id' => $question->getId(),
             'text' => $question->getQuestion(),
-            'image' => $question->getImage(),
-            'choices' => array_map(static fn (Choix $c): string => (string) $c->getLibelle(), $choix),
-            'images' => array_map(static fn (Choix $c): ?string => $c->getImage(), $choix),
-            'answer' => $question->getBonChoix()?->getLibelle(),
+            'image' => null === $question->getImage() ? null
+                : $this->generateUrl('quizz_question_image', ['id' => $question->getId()]),
+            'choices' => array_map(fn (Choix $c): array => [
+                'id' => $c->getId(),
+                // Choix-image : le libellé (« Irlande ») donnerait la réponse, il est
+                // envoyé seulement après la réponse du joueur
+                'libelle' => null === $c->getImage() ? $c->getLibelle() : null,
+                'image' => null === $c->getImage() ? null
+                    : $this->generateUrl('quizz_choix_image', ['id' => $c->getId()]),
+            ], $choix),
         ];
     }
 }
