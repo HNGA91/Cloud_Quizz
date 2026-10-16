@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/reset-password')]
 class ResetPasswordController extends AbstractController
@@ -28,6 +29,7 @@ class ResetPasswordController extends AbstractController
     public function __construct(
         private readonly ResetPasswordHelperInterface $resetPasswordHelper,
         private readonly EntityManagerInterface $entityManager,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -98,10 +100,11 @@ class ResetPasswordController extends AbstractController
         } catch (ResetPasswordExceptionInterface $exception) {
             $this->addFlash(
                 'reset_password_error',
+                // Messages du bundle traduits (fichier ResetPasswordBundle.fr.xlf fourni par le bundle)
                 sprintf(
                     '%s - %s',
-                    ResetPasswordExceptionInterface::MESSAGE_PROBLEM_VALIDATE,
-                    $exception->getReason()
+                    $this->translator->trans(ResetPasswordExceptionInterface::MESSAGE_PROBLEM_VALIDATE, [], 'ResetPasswordBundle'),
+                    $this->translator->trans($exception->getReason(), [], 'ResetPasswordBundle')
                 )
             );
 
@@ -161,10 +164,11 @@ class ResetPasswordController extends AbstractController
         } catch (ResetPasswordExceptionInterface $exception) {
             $this->addFlash(
                 'reset_password_error',
+                // Messages du bundle traduits (fichier ResetPasswordBundle.fr.xlf fourni par le bundle)
                 sprintf(
                     '%s - %s',
-                    ResetPasswordExceptionInterface::MESSAGE_PROBLEM_HANDLE,
-                    $exception->getReason()
+                    $this->translator->trans(ResetPasswordExceptionInterface::MESSAGE_PROBLEM_HANDLE, [], 'ResetPasswordBundle'),
+                    $this->translator->trans($exception->getReason(), [], 'ResetPasswordBundle')
                 )
             );
 
