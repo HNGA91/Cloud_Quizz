@@ -20,12 +20,20 @@ RUN apt-get update \
 
 # 3. Apache : module de réécriture d'URL + notre configuration de site
 #    (racine sur public/, port fourni par Render via la variable PORT)
-RUN a2enmod rewrite
+#    ServerName : évite l'avertissement AH00558 à chaque démarrage d'Apache
+RUN a2enmod rewrite \
+    && echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 RUN sed -i 's/^Listen 80$/Listen ${PORT}/' /etc/apache2/ports.conf
 
 # 4. Réglages PHP de production (fichier fourni par l'image officielle)
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+#    variables_order = "EGPCS" : sous Apache, PHP ne remplit pas $_ENV avec les
+#    variables du conteneur (réglage par défaut "GPCS", sans le E). Symfony ne
+#    verrait alors pas APP_ENV, DATABASE_URL… définis sur Render et retomberait
+#    sur les valeurs du fichier .env (APP_ENV=dev). Le "E" les rend visibles.
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo 'variables_order = "EGPCS"' > "$PHP_INI_DIR/conf.d/zz-variables-order.ini"
 
 # 5. Composer, copié depuis son image officielle (pas d'installation manuelle)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
